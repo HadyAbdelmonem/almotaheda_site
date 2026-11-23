@@ -22,7 +22,7 @@
     if (setting('payment_card_enabled', false)) { $paymentMarks[] = __('store.card'); }
 @endphp
 {{-- Footer (spec §6.5/§10.6, M15): ink background, top wire with a slow
-     pulse, back-to-top bolt button. All data comes from settings/pages. --}}
+     pulse. All data comes from settings/pages. --}}
 <div class="bg-ink text-white">
     <x-electric.wire orientation="h" :pulse="true" dark class="block" />
     <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 md:px-6 lg:grid-cols-4">
@@ -81,14 +81,14 @@
             @endif
         </div>
     </div>
+    {{-- Bottom bar: a single centered copyright line. The old in-flow
+         "back to top" text link was removed by owner request (2026-11-23);
+         the floating arrow button next to the WhatsApp float is the one
+         back-to-top control now. Payment marks live in the contact
+         column above, so nothing else shares this bar. --}}
     <div class="border-t border-white/10">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 text-xs text-white/60 md:px-6">
+        <div class="mx-auto flex max-w-7xl items-center justify-center px-4 py-4 text-center text-xs text-white/60 md:px-6">
             <span>© {{ now()->format('Y') }} {{ $storeName }}</span>
-            {{-- M15 back-to-top bolt button. --}}
-            <button type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-                    class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 font-bold text-white/85 hover:text-primary" aria-label="{{ __('store.back_to_top') }}">
-                <x-icons.zap :size="16" class="text-primary" /> {{ __('store.back_to_top') }}
-            </button>
         </div>
     </div>
 </div>

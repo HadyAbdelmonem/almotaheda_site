@@ -32,7 +32,7 @@
             <div><label class="mb-1 block font-semibold text-ink" for="phone">رقم الموبايل</label>
                 <input id="phone" wire:model="phone" class="min-h-11 w-full rounded-lg border border-wire px-3" dir="ltr">@error('phone') <p class="mt-1 text-sm text-danger">{{ $message }}</p> @enderror</div>
             <div><label class="mb-1 block font-semibold text-ink" for="gov">{{ __('store.governorate') }}</label>
-                <select id="gov" wire:model="governorate" class="min-h-11 w-full rounded-lg border border-wire px-3">
+                <select id="gov" wire:model="governorate" class="ui-select min-h-11 w-full rounded-lg border border-wire px-3">
                     <option value="">{{ __('store.choose_governorate') }}</option>
                     @foreach($governorates as $gov)<option value="{{ $gov }}">{{ $gov }}</option>@endforeach
                 </select>@error('governorate') <p class="mt-1 text-sm text-danger">{{ $message }}</p> @enderror</div>

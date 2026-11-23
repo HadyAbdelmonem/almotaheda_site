@@ -46,7 +46,7 @@
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                         <label for="co-gov" class="mb-1 block font-semibold text-ink">{{ __('store.governorate') }}</label>
-                        <select id="co-gov" wire:model.live="governorateId" class="min-h-11 w-full rounded-lg border border-wire-dark/30 bg-surface px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <select id="co-gov" wire:model.live="governorateId" class="ui-select min-h-11 w-full rounded-lg border border-wire-dark/30 bg-surface px-3 focus:outline-none focus:ring-2 focus:ring-primary">
                             <option value="">{{ __('store.choose_governorate') }}</option>
                             @foreach($rates as $rate)
                                 <option value="{{ $rate->id }}">{{ $rate->name_ar }} — {{ \App\Support\Money::format((string) $rate->fee) }}</option>

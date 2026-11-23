@@ -5,7 +5,9 @@
          and hide automatically when their data is empty. --}}
 
     {{-- M20 hero slider: first slide eager + fetchpriority high, never
-         revealed; autoplay only at full motion with a pause/play control. --}}
+         revealed; autoplay (10s) only at full motion with a pause/play
+         control. On mobile the controls sit at the top corner so they
+         never overlap the slide caption. --}}
     @if($heroBanners->isNotEmpty())
         <section data-hero class="bg-ink" wire:ignore>
             <div class="relative mx-auto max-w-7xl">
@@ -38,7 +40,7 @@
                         @endforeach
                     </div>
                 </div>
-                <div class="absolute bottom-4 end-4 z-10 flex items-center gap-3">
+                <div class="absolute end-4 top-3 z-10 flex items-center gap-3 md:bottom-4 md:top-auto">
                     <div data-hero-pagination class="swiper-pagination !static flex gap-1.5"></div>
                     <button type="button" data-hero-toggle data-state="paused"
                             data-label-play="{{ __('store.play_slides') }}" data-label-pause="{{ __('store.pause_slides') }}"
@@ -88,25 +90,31 @@
             </section>
         @endif
 
-        {{-- Brands strip: manually swipeable only, never auto-advances.
+        {{-- Brands rail (owner pass, 2026-11-23): Swiper with 5s autoplay
+             at full motion only, looping when there are enough brands;
+             manual swipe always works and autoplay resumes afterwards.
              M25 (Phase 9B): logos sit on a thin wire rail with a single
              pulse while visible (E01, ambient + x-live). --}}
         @if($brands->isNotEmpty())
             <section aria-label="{{ __('store.brands') }}">
                 <x-section-title :title="__('store.brands')" />
                 <x-electric.wire orientation="h" :pulse="true" class="mb-1 opacity-70" />
-                <div class="flex snap-x gap-3 overflow-x-auto pb-2">
-                    @foreach($brands as $brand)
-                        <a href="{{ route('brands.show', $brand->slug) }}" wire:navigate
-                           class="flex min-h-16 w-36 shrink-0 snap-start items-center justify-center rounded-xl bg-surface px-4 shadow-sm">
-                            @php $logo = $brand->getFirstMedia('logo'); @endphp
-                            @if($logo)
-                                <img src="{{ $logo->getUrl() }}" alt="{{ $brand->name }}" width="120" height="48" loading="lazy" class="max-h-12 object-contain md:grayscale md:hover:grayscale-0">
-                            @else
-                                <span class="font-extrabold text-ink">{{ $brand->name }}</span>
-                            @endif
-                        </a>
-                    @endforeach
+                <div class="swiper" data-brands-rail dir="rtl">
+                    <div class="swiper-wrapper">
+                        @foreach($brands as $brand)
+                            <div class="swiper-slide">
+                                <a href="{{ route('brands.show', $brand->slug) }}" wire:navigate
+                                   class="flex min-h-16 w-36 items-center justify-center rounded-xl bg-surface px-4 shadow-sm">
+                                    @php $logo = $brand->getFirstMedia('logo'); @endphp
+                                    @if($logo)
+                                        <img src="{{ $logo->getUrl() }}" alt="{{ $brand->name }}" width="120" height="48" loading="lazy" class="max-h-12 object-contain md:grayscale md:hover:grayscale-0">
+                                    @else
+                                        <span class="font-extrabold text-ink">{{ $brand->name }}</span>
+                                    @endif
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </section>
         @endif

@@ -237,7 +237,7 @@
 
     {{-- 15. Mobile sticky buy bar (M44) --}}
     <div data-sticky-bar data-sticky-target="#main-buy-button"
-         class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-wire bg-surface px-4 py-2 lg:hidden">
+         class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-wire bg-surface px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
         <span class="font-extrabold tabular-nums text-ink">{{ \App\Support\Money::format($pricing['unit_price']) }}</span>
         <x-btn class="flex-1" wire:click="addToCart" wire:loading.attr="disabled" wire:target="addToCart" :disabled="$stockState === 'out'">{{ $stockState === 'out' ? __('store.out_of_stock') : __('store.add_to_cart') }}</x-btn>
     </div>

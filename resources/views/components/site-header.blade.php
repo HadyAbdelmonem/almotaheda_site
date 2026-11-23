@@ -10,10 +10,16 @@
      mobile drawer. All identity data comes from settings. --}}
 <div x-data="{ mobileSearch: false, megaOpen: false, megaTimer: null }">
 
-    {{-- M11 topbar marquee: pauses on hover/focus/touch; static in lite/off. --}}
+    {{-- M11 topbar marquee: pauses on hover/focus/touch; static in lite/off.
+         On mobile the marquee is replaced by one centered static message:
+         the moving track clipped and duplicated fragments there. --}}
     @if($topbarMessages !== [])
         <div class="topbar bg-ink text-white" x-live>
-            <div class="topbar-marquee ambient overflow-hidden py-2" tabindex="0" aria-label="{{ $topbarMessages[0] }}">
+            <p class="flex items-center justify-center gap-2 px-4 py-2 text-center text-[13px] font-semibold md:hidden">
+                {{ $topbarMessages[0] }}
+                <x-icons.zap :size="14" class="shrink-0 text-primary" />
+            </p>
+            <div class="topbar-marquee ambient hidden overflow-hidden py-2 md:block" tabindex="0" aria-label="{{ $topbarMessages[0] }}">
                 <div class="marquee-track flex w-max items-center gap-8 whitespace-nowrap px-4">
                     @foreach([0, 1] as $copy)
                         <div class="flex items-center gap-8" @if($copy === 1) aria-hidden="true" @endif>
@@ -40,9 +46,9 @@
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
 
-            <a href="{{ url('/') }}" wire:navigate class="flex shrink-0 items-center gap-2" aria-label="{{ $storeName }}">
+            <a href="{{ url('/') }}" wire:navigate class="flex min-w-0 items-center gap-2" aria-label="{{ $storeName }}">
                 <img src="{{ store_logo_url() }}" alt="{{ $storeName }}" width="36" height="36" class="h-9 w-9 shrink-0 rounded-lg object-contain">
-                <span class="text-lg font-extrabold text-ink md:text-xl">{{ $storeName }}</span>
+                <span class="truncate text-base font-extrabold text-ink sm:text-lg md:text-xl">{{ $storeName }}</span>
             </a>
 
             {{-- Desktop live search (single LiveSearch instance; on mobile it
@@ -129,9 +135,9 @@
          no height animation is involved. --}}
     <dialog id="mobile-drawer" class="mobile-drawer m-0 h-full max-h-none w-[85vw] max-w-xs bg-surface p-0 shadow-md backdrop:bg-ink/50 lg:hidden">
         <div class="flex items-center justify-between border-b border-wire px-4 py-3">
-            <span class="flex items-center gap-2 font-extrabold text-ink">
+            <span class="flex min-w-0 items-center gap-2 font-extrabold text-ink">
                 <img src="{{ store_logo_url() }}" alt="" width="28" height="28" class="h-7 w-7 shrink-0 rounded-md object-contain">
-                {{ $storeName }}
+                <span class="truncate">{{ $storeName }}</span>
             </span>
             <button type="button" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-ink"
                     onclick="document.getElementById('mobile-drawer')?.close()" aria-label="{{ __('store.close') }}">

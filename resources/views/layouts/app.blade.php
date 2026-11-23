@@ -58,17 +58,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="bg-canvas text-body font-sans antialiased">
-    {{-- Loading splash (owner override of the spec preloader ban, 2026-11-23):
-         overlay only, first in the body, hidden on window load by splash.js
-         with CSS/JS fallbacks so content is never trapped behind it. --}}
-    <x-splash />
-
+<body class="flex min-h-dvh flex-col bg-canvas text-body font-sans antialiased">
     <header>
         <x-site-header />
     </header>
 
-    <main>
+    <main class="w-full flex-1">
         {{ $slot ?? '' }}
         @yield('content')
     </main>
@@ -81,6 +76,9 @@
     @persist('whatsapp-float')
         <x-whatsapp-float />
     @endpersist
+
+    {{-- Back-to-top float: stacked directly above the WhatsApp float. --}}
+    <x-back-to-top />
 
     {{-- Spark particle root (spec §11.5 fx.js); persisted across wire:navigate. --}}
     @persist('fx-root')

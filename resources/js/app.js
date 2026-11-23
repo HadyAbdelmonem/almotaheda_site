@@ -8,7 +8,7 @@ import './motion/fly-to-cart.js';
 import './motion/sticky-bar.js';
 import './motion/header.js';
 import './motion/switch.js';
-import './motion/splash.js';
+import './motion/back-to-top.js';
 // Auto-animate small lists with stable wire:key (spec 11.9).
 import autoAnimate from '@formkit/auto-animate';
 function initAutoAnimate() {
@@ -42,12 +42,12 @@ document.addEventListener('livewire:navigated', () => {
     }
 });
 
-// Homepage hero + product carousels load lazily only where present.
-if (document.querySelector('[data-hero], [data-product-carousel]')) {
+// Homepage hero + product carousels + brands rail load lazily only where present.
+if (document.querySelector('[data-hero], [data-product-carousel], [data-brands-rail]')) {
     import('./home.js');
 }
 document.addEventListener('livewire:navigated', () => {
-    if (document.querySelector('[data-hero], [data-product-carousel]')) {
+    if (document.querySelector('[data-hero], [data-product-carousel], [data-brands-rail]')) {
         import('./home.js');
     }
 });

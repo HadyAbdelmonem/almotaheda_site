@@ -61,6 +61,13 @@
     outline-offset: 2px;
 }
 
+/* Layout safety net (owner responsive pass, 2026-11-23): no page may
+   scroll horizontally. `clip` (not `hidden`) is used so no scroll
+   container is created and the sticky header keeps working; the root
+   causes (untruncated header name, marquee fragments, overlapping hero
+   controls) are fixed in the components themselves. */
+html, body { overflow-x: clip; }
+
 /* Motion safety nets (spec §11.4): off level and reduced motion show final states. */
 html[data-motion="off"] *,
 html[data-motion="off"] *::before,
@@ -266,65 +273,18 @@ html.js:not([data-motion="off"]) .mobile-drawer[open] { animation: drawer-in 250
 @keyframes totals-flash { from { opacity: .18; } to { opacity: 0; } }
 html[data-motion="off"] .totals-flash::after { animation: none; }
 
-/* ---- Owner extra: loading splash (OWNER OVERRIDE, 2026-11-23) ----
-   Spec §11.2 rule 9 / §12 forbade preloaders; the owner explicitly asked
-   for this screen. It is an overlay only and can never trap content:
-   - display:none unless the inline head script added html.js (no JS = no
-     splash at all, content fully visible);
-   - splash.js hides it on window load (immediately on DOMContentLoaded at
-     motion off), with a 2.5s hard cap in JS;
-   - as a last resort this CSS animation fades it away at 2.6s forwards,
-     even if the JS module failed to load. */
-.splash {
-    display: none;
-    position: fixed; inset: 0; z-index: 100;
-    align-items: center; justify-content: center;
-    background: var(--color-ink);
-    animation: splash-autohide 400ms ease-out 2600ms forwards;
-    transition: opacity 350ms ease-out;
+/* ---- Owner pass (2026-11-23): back-to-top float + brands rail ---- */
+/* Back-to-top: hidden (and inert) until motion/back-to-top.js adds
+   .is-visible after ~550px of scroll; fade + small rise, opacity and
+   transform only. At motion off the global nets kill the transition,
+   so the button simply appears. */
+[data-back-to-top] {
+    opacity: 0; transform: translateY(12px); pointer-events: none;
+    transition: opacity 250ms var(--ease-out-soft), transform 250ms var(--ease-out-soft);
 }
-html.js .splash { display: flex; }
-.splash.is-hidden { opacity: 0; pointer-events: none; }
-@keyframes splash-autohide {
-    to { opacity: 0; visibility: hidden; pointer-events: none; }
-}
-.splash-inner {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 1rem; padding: 1.5rem; text-align: center;
-}
-.splash-logo-wrap { position: relative; inline-size: 96px; block-size: 96px; }
-.splash-logo {
-    position: relative; z-index: 1;
-    inline-size: 96px; block-size: 96px;
-    border-radius: 20px; object-fit: contain;
-}
-/* Pre-drawn glow behind the logo: opacity/transform only (spec §11.2). */
-.splash-glow {
-    position: absolute; inset: -28px; border-radius: 9999px;
-    background: radial-gradient(circle, rgb(255 193 7 / .35) 0%, transparent 70%);
-    opacity: 0;
-}
-/* One-time ring expanding from the logo (finite, full motion only). */
-.splash-ring {
-    position: absolute; inset: 0; z-index: 2; border-radius: 20px;
-    border: 2px solid var(--color-primary); opacity: 0; pointer-events: none;
-}
-html[data-motion="full"] .splash-glow { animation: splash-glow-in 900ms var(--ease-out-soft) 100ms 1 forwards; }
-html[data-motion="full"] .splash-ring { animation: splash-ring-out 900ms var(--ease-out-soft) 150ms 1 forwards; }
-@keyframes splash-glow-in {
-    from { opacity: 0; transform: scale(.7); }
-    to { opacity: 1; transform: scale(1); }
-}
-@keyframes splash-ring-out {
-    0% { opacity: .7; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.45); }
-}
-/* Lite: static logo and name, no glow/ring/pulse (the .ambient net above
-   already stops the wire pulse); the fade-out transition still applies.
-   Off / reduced motion: all animations are killed by the global nets and
-   splash.js removes the node on DOMContentLoaded. */
-.splash-name {
-    color: var(--color-surface);
-    font-size: 1.25rem; font-weight: 800; line-height: 1.5;
-}
-.splash-wire { display: block; }
+[data-back-to-top].is-visible { opacity: 1; transform: none; pointer-events: auto; }
+
+/* Brands rail is a Swiper with auto-width slides: each slide keeps the
+   old rail card width (9rem) so the strip looks identical to before. */
+[data-brands-rail] .swiper-slide { width: 9rem; }
+

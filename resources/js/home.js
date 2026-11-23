@@ -1,8 +1,14 @@
 // Homepage Swipers (spec §6.5/§10.6, M20/M26): hero slider + product
-// carousels. Swiper DOM lives inside wire:ignore and is initialized
-// here, re-hooked on livewire:navigated (never DOMContentLoaded only).
-// Hero autoplay runs ONLY at motion level `full`, >= 5s, with a
-// visible pause/play control; it stops on focus/interaction.
+// carousels + brands rail. Swiper DOM lives inside wire:ignore and is
+// initialized here, re-hooked on livewire:navigated (never
+// DOMContentLoaded only).
+// Autoplay runs ONLY at motion level `full` (which already excludes
+// prefers-reduced-motion via the level downgrade): hero every 10s,
+// brands every 5s. Both pause on hover (pauseOnMouseEnter) and while
+// the user interacts (disableOnInteraction stays false so autoplay
+// resumes afterwards), and Swiper's Autoplay module pauses while the
+// tab is hidden and resumes when it becomes visible again. The hero
+// keeps its visible pause/play control and stops on focus.
 import { Swiper } from 'swiper';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -16,7 +22,7 @@ function initHero(root) {
     if (root.dataset.heroInit) return;
     root.dataset.heroInit = '1';
     const autoplay = motionIsFull()
-        ? { delay: 5000, disableOnInteraction: true, pauseOnMouseEnter: true }
+        ? { delay: 10000, disableOnInteraction: false, pauseOnMouseEnter: true }
         : false;
     const swiper = new Swiper(root.querySelector('[data-hero-main]'), {
         modules: [Autoplay, Pagination],
@@ -65,9 +71,31 @@ function initProductCarousels() {
     });
 }
 
+function initBrandsRails() {
+    document.querySelectorAll('[data-brands-rail]').forEach((el) => {
+        if (el.dataset.brandsInit) return;
+        el.dataset.brandsInit = '1';
+        const slideCount = el.querySelectorAll('.swiper-slide').length;
+        // Loop only when there are enough slides to fill the rail twice;
+        // with fewer brands the rail is a plain swipeable strip.
+        const loop = slideCount >= 6;
+        const autoplay = motionIsFull() && slideCount > 2
+            ? { delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }
+            : false;
+        new Swiper(el, {
+            modules: [Autoplay],
+            slidesPerView: 'auto',
+            spaceBetween: 12,
+            loop,
+            autoplay,
+        });
+    });
+}
+
 function initHome() {
     document.querySelectorAll('[data-hero]').forEach(initHero);
     initProductCarousels();
+    initBrandsRails();
 }
 
 // M21: the hero circuit overlay starts only after the window `load`

@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\ProductTemplateExport;
+use App\Filament\Pages\CatalogImport;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Models\Brand;
 use App\Models\Category;
@@ -15,6 +16,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 uses(RefreshDatabase::class);
 
@@ -206,4 +208,19 @@ test('bulk image attach matches model code pattern and reports unmatched files',
     expect($result['attached'])->toBe(2)
         ->and($result['unmatched'])->toBe(['NOPE-9-1.jpg'])
         ->and(Product::where('model_code', 'IMG-1')->first()->getMedia('gallery'))->toHaveCount(2);
+});
+
+test('catalog import page downloads return binary file responses (template + export)', function () {
+    // Regression: Excel::download() returns BinaryFileResponse in Excel 4;
+    // the page methods once declared StreamedResponse and threw a TypeError
+    // when the admin clicked either download button.
+    $page = new CatalogImport;
+
+    $template = $page->downloadTemplate();
+    expect($template)->toBeInstanceOf(BinaryFileResponse::class)
+        ->and($template->getFile()->getFilename())->not->toBeEmpty();
+
+    Product::factory()->create();
+    $export = $page->downloadExport();
+    expect($export)->toBeInstanceOf(BinaryFileResponse::class);
 });

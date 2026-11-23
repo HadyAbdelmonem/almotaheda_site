@@ -18,14 +18,45 @@ class StorefrontNav
     public static function categories(): Collection
     {
         try {
-            return Cache::rememberForever('category_tree', function () {
+            // Only the ID tree is cached (see HomeController): caching
+            // Eloquent collections can unserialize as incomplete classes
+            // on some PHP/OPcache setups. Rows are re-hydrated in order.
+            $tree = Cache::rememberForever('category_tree', function () {
                 return Category::query()
                     ->whereNull('parent_id')
                     ->where('is_active', true)
                     ->orderBy('sort_order')
                     ->with(['children' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')])
-                    ->get();
+                    ->get()
+                    ->map(fn (Category $parent) => [
+                        'id' => $parent->id,
+                        'children' => $parent->children->pluck('id')->all(),
+                    ])
+                    ->all();
             });
+
+            $parentIds = array_column($tree, 'id');
+            $childIds = array_merge(...array_map(fn ($node) => $node['children'], $tree) ?: [[]]);
+            $byId = Category::query()
+                ->whereIn('id', [...$parentIds, ...$childIds])
+                ->get()
+                ->keyBy('id');
+
+            return collect($tree)
+                ->map(function ($node) use ($byId) {
+                    $parent = $byId->get($node['id']);
+                    if ($parent === null) {
+                        return null;
+                    }
+                    $parent->setRelation('children', collect($node['children'])
+                        ->map(fn ($id) => $byId->get($id))
+                        ->filter()
+                        ->values());
+
+                    return $parent;
+                })
+                ->filter()
+                ->values();
         } catch (\Throwable) {
             // Catalog tables may not exist yet (e.g. during initial setup).
             return collect();

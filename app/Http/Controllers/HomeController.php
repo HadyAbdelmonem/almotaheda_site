@@ -22,28 +22,56 @@ class HomeController extends Controller
     public function index(): View
     {
         try {
-            $data = Cache::rememberForever('home_sections', function () {
-                $bannerQuery = fn (BannerPosition $position, int $limit) => Banner::query()
+            // Only IDs are cached: caching Eloquent collections serializes
+            // whole model graphs into the file cache, which can come back
+            // as __PHP_Incomplete_Class on some PHP/OPcache setups (seen on
+            // PHP 8.5/XAMPP). IDs serialize safely; rows are re-hydrated in
+            // the cached order with fresh queries.
+            $ids = Cache::rememberForever('home_sections', function () {
+                $bannerIds = fn (BannerPosition $position, int $limit) => Banner::query()
                     ->where('position', $position)
                     ->where('is_active', true)
                     ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
                     ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', now()))
                     ->orderBy('sort_order')
                     ->limit($limit)
-                    ->get();
+                    ->pluck('id')
+                    ->all();
 
-                $productQuery = fn () => Product::query()
-                    ->where('is_active', true)
-                    ->with(['brand', 'category.parent', 'media', 'variants' => fn ($q) => $q->where('is_active', true), 'priceTiers']);
+                $productIds = fn ($order) => $order(Product::query()->where('is_active', true))
+                    ->limit(10)
+                    ->pluck('id')
+                    ->all();
 
                 return [
-                    'heroBanners' => $bannerQuery(BannerPosition::Hero, 5),
-                    'promoBanners' => $bannerQuery(BannerPosition::Promo, 3),
-                    'brands' => Brand::query()->where('is_active', true)->orderBy('sort_order')->with('media')->get(),
-                    'bestSellers' => $productQuery()->orderByDesc('sales_count')->orderByDesc('id')->limit(10)->get(),
-                    'newArrivals' => $productQuery()->orderByDesc('created_at')->orderByDesc('id')->limit(10)->get(),
+                    'heroBanners' => $bannerIds(BannerPosition::Hero, 5),
+                    'promoBanners' => $bannerIds(BannerPosition::Promo, 3),
+                    'brands' => Brand::query()->where('is_active', true)->orderBy('sort_order')->pluck('id')->all(),
+                    'bestSellers' => $productIds(fn ($q) => $q->orderByDesc('sales_count')->orderByDesc('id')),
+                    'newArrivals' => $productIds(fn ($q) => $q->orderByDesc('created_at')->orderByDesc('id')),
                 ];
             });
+
+            $inOrder = fn ($models, array $orderedIds) => collect($orderedIds)
+                ->map(fn ($id) => $models->get($id))
+                ->filter()
+                ->values();
+
+            $bannerById = Banner::query()->whereIn('id', [...$ids['heroBanners'], ...$ids['promoBanners']])->get()->keyBy('id');
+            $brandById = Brand::query()->whereIn('id', $ids['brands'])->with('media')->get()->keyBy('id');
+            $productById = Product::query()
+                ->whereIn('id', [...$ids['bestSellers'], ...$ids['newArrivals']])
+                ->with(['brand', 'category.parent', 'media', 'variants' => fn ($q) => $q->where('is_active', true), 'priceTiers'])
+                ->get()
+                ->keyBy('id');
+
+            $data = [
+                'heroBanners' => $inOrder($bannerById, $ids['heroBanners']),
+                'promoBanners' => $inOrder($bannerById, $ids['promoBanners']),
+                'brands' => $inOrder($brandById, $ids['brands']),
+                'bestSellers' => $inOrder($productById, $ids['bestSellers']),
+                'newArrivals' => $inOrder($productById, $ids['newArrivals']),
+            ];
         } catch (\Throwable) {
             // Content tables may not exist yet (e.g. during initial setup).
             $data = [

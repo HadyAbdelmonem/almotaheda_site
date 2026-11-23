@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use UnitEnum;
 
@@ -67,12 +68,12 @@ class CatalogImport extends Page
     /** @var array{attached: int, unmatched: array<int, string>, ambiguous: array<int, string>} */
     public array $imageResult = ['attached' => 0, 'unmatched' => [], 'ambiguous' => []];
 
-    public function downloadTemplate(): StreamedResponse
+    public function downloadTemplate(): BinaryFileResponse
     {
         return Excel::download(new ProductTemplateExport, 'products-template.xlsx');
     }
 
-    public function downloadExport(): StreamedResponse
+    public function downloadExport(): BinaryFileResponse
     {
         return Excel::download(new ProductCatalogExport, 'products-export.xlsx');
     }

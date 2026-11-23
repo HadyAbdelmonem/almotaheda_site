@@ -69,6 +69,7 @@ php artisan key:generate
 ```bash
 composer install --no-dev --optimize-autoloader
 ```
+> ملحوظة: `composer install` بقى بينشر أصول لوحة التحكم تلقائيًا (`filament:assets`) — ولوحة التحكم من غيرها بتظهر من غير تنسيق. لو ثبّت الحزم بأي طريقة تانية، شغّل `php artisan filament:assets` يدويًا مرة واحدة.
 
 ملفات الواجهة (CSS/JS) بتتبني على جهازك المحلي مش على السيرفر:
 ```bash

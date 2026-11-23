@@ -1,0 +1,2 @@
+@props(['size' => 24])
+<svg {{ $attributes->merge(['class' => 'inline-block shrink-0']) }} width="{{ $size }}" height="{{ $size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><g class="fan-blades"><path d="M12 12c-.3-2.8.6-4.8 2.6-6 .9 2.1-.2 4.9-2.6 6z"/><path d="M12 12c2.8-.3 4.8.6 6 2.6-2.1.9-4.9-.2-6-2.6z"/><path d="M12 12c-2.5 1.3-4.7 1.2-6.6-.3 1.2-1.9 4.2-2.2 6.6.3z"/></g><circle cx="12" cy="12" r="1.2"/></svg>

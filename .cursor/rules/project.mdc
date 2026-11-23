@@ -1,0 +1,65 @@
+---
+description: Core rules for the Egyptian electrical tools store (Laravel 13 + Filament 5 + Livewire 4 + Tailwind 4.1+). Always apply.
+alwaysApply: true
+---
+
+# Project rules (v3)
+
+The single source of truth is `docs/PROJECT_SPEC.md` (v3). Phase prompts live in `PHASE_PROMPTS.md`. Read the full spec before starting a phase, then the exact phase prompt.
+
+## Scope and honesty
+- Build ONLY the phase I ask for. Do not start the next phase. Do not refactor unrelated files.
+- Open decisions are already resolved in spec §4.10. Use those defaults and do not ask again. If a genuinely new blocker appears, report it and stop only the affected task. Never invent business rules.
+- Before large changes, briefly state your plan (files to create/change), then implement.
+- **Never claim a test, browser check, Lighthouse run, package-compatibility check or deployment succeeded unless you actually ran it.** Report the exact command and a concise result. Anything not run is reported as NOT RUN with the reason.
+- When a phase is finished: send the spec §13 report (what was built, files changed, how to test manually, assumptions, open questions, NOT RUN items). Then stop.
+
+## Packages and versions
+- Fixed stack: PHP 8.3+, Laravel 13 (`^13.0`), Filament 5 (`^5.0`), Livewire 4 (`^4.0`, class-based components only), Tailwind CSS 4.1+ with `@tailwindcss/vite`, Pest, Pint.
+- Alpine.js comes from Livewire. Never install or load it separately.
+- Inspect installed versions (`composer show`, `npm ls`) and use Laravel Boost / official docs for those exact versions. Never write Filament 3, Livewire 3 or Tailwind 3 syntax from memory.
+- Do not add Composer/npm packages beyond spec §2. Never add GSAP, Lottie, AOS, jQuery, confetti, UI kits, icon packages, Three.js/WebGL or a focus-trap library.
+- If Composer cannot resolve the stack, STOP and report the exact conflict. Never downgrade or swap a package silently. Commit lockfiles.
+
+## Architecture
+- Code, comments, identifiers, commit messages: English. All customer-facing text: Arabic, RTL, via lang files (no scattered literals).
+- Thin controllers/Livewire components. Business logic in `app/Services`: PricingService, QuantityService, CatalogAttributeService, CartService, CouponService, ShippingService, StockService, OrderService, PaymentService.
+- PHP backed enums for statuses/types with Arabic `label()` and `color()`. Validation in Form Requests. Authorization via Policies.
+- Eager-load relations, no N+1, add indexes for searched/filtered columns.
+
+## Money, quantities, stock, orders (critical)
+- Money is `decimal(12,2)`. Quantities are `decimal(12,3)`. Never use PHP/JS floats as the source of truth: use decimal strings through the tested `Money` / `QuantityService` wrappers (BCMath), half-up rounding to 2 decimals. Currency EGP, Western digits, format like `1,250 ج.م`.
+- Each product has ONE base sale unit from `config/units.php`. No implicit unit conversion. Enforce min / step / max quantity on the server.
+- Totals are computed on the server only. Never trust prices, discounts, stock or totals from the client.
+- Order creation runs in ONE DB transaction. Lock stock rows ordered by id ascending, then the coupon row (`lockForUpdate`). Any failure aborts everything.
+- Order status changes happen ONLY in `OrderService::changeStatus`. Stock disposition decisions happen ONLY in `OrderService::resolveStockDisposition`.
+- Cancel before shipping: restore stock once and release the coupon once. Cancel after shipping or return after delivery: `pending_inspection`; an admin decides `restored` or `written_off` with a mandatory note. Never restock automatically.
+- `sales_count` increases once on delivered and is reversed once on returned (never below zero).
+- Order items store immutable snapshots (name, variant, SKU, unit, prices, cost). Never read live product data for past orders.
+- Paymob: only a verified server callback sets paid/failed (HMAC with constant-time compare, merchant reference, amount, currency, unique provider transaction id, idempotent). The browser return page never marks paid. A late or duplicate successful payment is recorded and flagged for reconciliation, never revives the order. No automatic refunds in v1. COD is paid only when delivered. Bank transfer is marked paid manually after independent verification.
+- Every money/quantity/stock/order/payment change needs a Pest feature test.
+- Animations never block, delay or alter any money, stock, order or payment operation. The server result comes first.
+
+## Data and security
+- Never hardcode store data (name, phones, WhatsApp, fees, thresholds, texts, analytics IDs, bank details). Use `setting()`, `shipping_rates`, `pages`, `banners`.
+- `cost_price`, `admin_notes`, payment secrets, provider payloads and payment-proof paths must never reach the storefront. Use explicit select lists / resources, not `$hidden` alone.
+- Secrets only in `.env`; update `.env.example` without real values.
+- Rate-limit login, register, checkout, contact, wholesale, reviews, track-order, coupon apply. Honeypot on public forms.
+- CSRF stays on. Exempt only the exact server-to-server payment callback route, authenticated by its signature.
+- Guest tracking needs order number + phone and returns the same generic response on any mismatch. Enforce ownership on every account order/address/review route.
+- Uploads: images only, ≤ 4 MB, MIME and content validated, random filenames. Payment proofs are private.
+- Admin rich text is sanitized before rendering. `/_ui` exists only in the `local` environment.
+- Egyptian phone: normalize Arabic digits, strip +2/002, must match `^01[0125][0-9]{8}$`. WhatsApp format: `20` + number without the leading 0.
+
+## UI and motion
+- Mobile-first (test at 360px), RTL with logical utilities (`ms-`, `pe-`, `start-`...), tap targets ≥ 44px, Cairo self-hosted, Tailwind theme tokens for colors.
+- Reuse Blade components (product-card, price, stock-badge, breadcrumbs, free-shipping-bar, whatsapp-button...). Do not duplicate markup.
+- WebP conversions, lazy-load below the fold, explicit width/height. The LCP image is eager with `fetchpriority="high"` and is never animated in.
+- Motion follows spec §11 only. Do not invent effects or add libraries. Animate `transform` and `opacity` only (documented small-SVG exceptions aside). Never animate box-shadow, filter, width, height, margin or large-surface backgrounds.
+- Honor `full` / `lite` / `off` and `prefers-reduced-motion`. The browser may only downgrade the owner's level, never upgrade it. Nothing above the fold fades or slides in. Content stays visible with JS disabled.
+- Every infinite animation uses `ambient` + `x-live`, and at most 3 run in the viewport at once.
+- Third-party DOM (Swiper, lightbox) goes inside `wire:ignore` and is initialized from Alpine, never from `DOMContentLoaded`. Anything global re-hooks on `livewire:navigated`.
+- Every new electric component or animation exists in the spec catalog and is shown on `/_ui`.
+
+## Done means
+`php artisan migrate:fresh --seed` works on a disposable local database only (never on staging/production), `php artisan test` passes, Pint applied, no debug leftovers, no secrets in code, motion QA (§11.10) passed for phases that add motion, and anything not run is marked NOT RUN.

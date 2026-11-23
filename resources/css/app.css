@@ -1,0 +1,330 @@
+@import "tailwindcss";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* Motion-level variants (spec §11.4): gate utilities by the owner's motion level. */
+@custom-variant motion-full (&:where(html[data-motion="full"] *));
+@custom-variant motion-any (&:where(html[data-motion="full"] *, html[data-motion="lite"] *));
+
+@theme {
+    /* Design tokens (spec §10.2 "Industrial Spark") */
+    --color-primary: #ffc107;
+    --color-primary-600: #e0a800;
+    --color-ink: #111827;
+    --color-body: #1f2937;
+    --color-muted: #6b7280;
+    --color-surface: #ffffff;
+    --color-canvas: #f5f6f8;
+    --color-success: #16a34a;
+    --color-danger: #dc2626;
+    --color-link: #1d4ed8;
+    --color-wire: #cbd5e1;
+    --color-wire-dark: #374151;
+    --color-spark: #ffe066;
+
+    /* Cairo is self-hosted in production; font files are added with the
+       storefront phases. font-display: swap via @font-face in the layout. */
+    --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
+
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --animate-fade-up: fade-up 400ms var(--ease-out-soft) both;
+    --animate-fade-in: fade-in 250ms ease-out both;
+    --animate-pop: pop 300ms var(--ease-out-soft) both;
+    --animate-ring: ring 550ms ease-out 1;
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: none; }
+    }
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes pop {
+        0% { transform: scale(.6); opacity: 0; }
+        60% { transform: scale(1.15); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes ring {
+        0% { transform: scale(1); opacity: .6; }
+        80%, 100% { transform: scale(1.8); opacity: 0; }
+    }
+}
+
+/* Accessibility (spec §10.8): a visible focus ring on every
+   keyboard-focusable element, using the primary token (2px + offset). */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Motion safety nets (spec §11.4): off level and reduced motion show final states. */
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+
+html[data-motion="lite"] .ambient,
+html[data-motion="lite"] .ambient * {
+    animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+    [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
+
+/* ---- Electric Motion System (spec 11.4): reveal, signature keyframes ---- */
+
+/* Reveal: visible without JS; hidden only when JS is on and motion is not off. */
+html.js:not([data-motion="off"]) [data-reveal]:not(.is-visible) { opacity: 0; transform: translateY(16px); }
+html[data-motion="lite"] [data-reveal]:not(.is-visible) { transform: none; }
+[data-reveal] { transition: opacity 400ms var(--ease-out-soft), transform 400ms var(--ease-out-soft); transition-delay: var(--reveal-delay, 0ms); }
+html[data-motion="lite"] [data-reveal] { transition-duration: 200ms; transition-delay: 0ms; }
+
+.t-origin { transform-box: fill-box; transform-origin: center; }
+
+/* Wire pulse: pathLength=600, drawn right-to-left (RTL). */
+.wire-pulse { stroke-dasharray: 48 552; stroke-dashoffset: 48; animation: wire-pulse 2.8s linear infinite; animation-play-state: paused; }
+.is-live .wire-pulse { animation-play-state: running; }
+@keyframes wire-pulse { from { stroke-dashoffset: 48; } to { stroke-dashoffset: -552; } }
+
+/* Spark particles (fx.js creates them inside #fx-root). */
+.spark-dot { position: absolute; inline-size: 4px; block-size: 4px; border-radius: 9999px; background: var(--color-primary); animation: spark-burst 450ms var(--ease-out-soft) forwards; }
+@keyframes spark-burst { from { transform: translate(0, 0) scale(1); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+
+/* Bulb states (E03). */
+.bulb .bulb-rays > * { opacity: 0; transform: scale(.6); transition: opacity 300ms var(--ease-out-soft), transform 300ms var(--ease-out-soft); transition-delay: calc(var(--i, 0) * 40ms); }
+.bulb .bulb-glow { opacity: 0; transform: scale(.6); transition: opacity 500ms var(--ease-out-soft), transform 500ms var(--ease-out-soft); }
+.bulb .bulb-filament { transition: stroke 300ms; }
+.bulb .bulb-glass { transition: fill 300ms; }
+.bulb[data-on="true"] .bulb-rays > * { opacity: 1; transform: none; }
+.bulb[data-on="true"] .bulb-glow { opacity: 1; transform: none; }
+.bulb[data-on="true"] .bulb-filament { stroke: var(--color-primary); }
+.bulb[data-on="true"] .bulb-glass { fill: color-mix(in oklab, var(--color-primary) 14%, transparent); }
+.bulb[data-flicker="true"] { animation: bulb-flicker 700ms linear 1; }
+@keyframes bulb-flicker { 0%, 100% { opacity: 1; } 15% { opacity: .35; } 30% { opacity: 1; } 55% { opacity: .5; } 70% { opacity: 1; } }
+
+/* Plug & socket states (E04). */
+.plug-socket .plug { transform: translateX(var(--plug-from, 24px)); transition: transform 500ms var(--ease-snap); }
+.plug-socket[data-state="connected"] .plug { transform: none; }
+.plug-socket .socket-led { opacity: .2; transition: opacity 150ms 450ms; }
+.plug-socket[data-state="connected"] .socket-led { opacity: 1; }
+
+/* Breaker switch knob (E05): RTL ON moves toward inline-end. */
+.switch-knob { transition: transform 220ms var(--ease-snap); }
+[role="switch"][aria-checked="true"] .switch-knob { transform: translateX(var(--knob-travel, -22px)); }
+
+/* Bolt loader (E06): gentle opacity pulse only while live. */
+.bolt-loader-svg { opacity: .55; }
+.is-live .bolt-loader-svg { animation: bolt-pulse 900ms ease-in-out infinite; }
+@keyframes bolt-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+
+/* Tool-icon keyframes (spec 11.4/11.7). */
+@keyframes spin-linear { to { transform: rotate(360deg); } }
+@keyframes gear-tick { to { transform: rotate(90deg); } }
+@keyframes hammer-swing { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(-28deg); } 60% { transform: rotate(6deg); } }
+@keyframes wifi-wave { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes rec-blink { 0%, 60% { opacity: 1; } 61%, 100% { opacity: .15; } }
+@keyframes led-chase { 0%, 100% { opacity: .2; } 25% { opacity: 1; } }
+@keyframes heat-rise { 0% { transform: translateY(2px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-4px); opacity: 0; } }
+@keyframes needle-sweep { 0%, 100% { transform: rotate(-35deg); } 50% { transform: rotate(35deg); } }
+@keyframes node-pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.2); opacity: 0; } }
+
+[data-icon] .drill-bit, [data-icon] .fan-blades, [data-icon] .gear-part,
+[data-icon] .gauge-needle, [data-icon] .hammer-part, [data-icon] .breaker-lever {
+    transform-box: fill-box; transform-origin: center;
+}
+[data-icon] .gauge-needle { transform-origin: bottom left; }
+[data-icon] .hammer-part { transform-origin: bottom left; }
+
+/* Tool-icon loops: hover-capable devices only while hovered/focused (11.7). */
+@media (hover: hover) {
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="drill"] .drill-bit,
+    html[data-motion="full"] [data-icon="drill"]:hover .drill-bit { animation: spin-linear .5s linear infinite; }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="fan"] .fan-blades,
+    html[data-motion="full"] [data-icon="fan"]:hover .fan-blades { animation: spin-linear .9s linear infinite; }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="cog"] .gear-part,
+    html[data-motion="full"] [data-icon="cog"]:hover .gear-part { animation: gear-tick 1.2s steps(4) infinite; }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="wifi"] .wifi-arc,
+    html[data-motion="full"] [data-icon="wifi"]:hover .wifi-arc,
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="router"] .wifi-arc,
+    html[data-motion="full"] [data-icon="router"]:hover .wifi-arc { animation: wifi-wave 1.2s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 150ms); }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="cctv"] .rec-dot,
+    html[data-motion="full"] [data-icon="cctv"]:hover .rec-dot { animation: rec-blink 1.2s linear infinite; }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="power-strip"] .strip-led,
+    html[data-motion="full"] [data-icon="power-strip"]:hover .strip-led { animation: led-chase 1s linear infinite; animation-delay: calc(var(--i, 0) * 150ms); }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="hammer"] .hammer-part,
+    html[data-motion="full"] [data-icon="hammer"]:hover .hammer-part { animation: hammer-swing .8s var(--ease-out-soft) infinite; }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="heater"] .heat-line,
+    html[data-motion="full"] [data-icon="heater"]:hover .heat-line { animation: heat-rise 1s linear infinite; animation-delay: calc(var(--i, 0) * 500ms); }
+    html[data-motion="full"] .group:is(:hover, :focus-visible) [data-icon="gauge"] .gauge-needle,
+    html[data-motion="full"] [data-icon="gauge"]:hover .gauge-needle { animation: needle-sweep 2s ease-in-out infinite; }
+}
+/* Touch devices: finite play once when revealed (11.7). */
+@media (hover: none) {
+    html[data-motion="full"] .is-visible [data-icon="drill"] .drill-bit { animation: spin-linear .5s linear 4; }
+    html[data-motion="full"] .is-visible [data-icon="fan"] .fan-blades { animation: spin-linear .9s linear 3; }
+}
+
+/* Section title wire underline (E08): draws via scaleX once visible. */
+.section-wire { transform: scaleX(0); transition: transform 400ms var(--ease-out-soft); }
+.is-visible .section-wire, [data-reveal].is-visible .section-wire { transform: scaleX(1); }
+html[data-motion="off"] .section-wire { transform: scaleX(1); }
+
+/* Primary button finite sheen on hover-capable devices (E13); never ambient. */
+@media (hover: hover) {
+    .btn-sheen::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / .45) 50%, transparent 60%);
+        transform: translateX(120%); transition: transform 600ms var(--ease-out-soft);
+    }
+    html[data-motion="full"] .btn-sheen:hover::after { transform: translateX(-120%); }
+}
+
+/* Header scroll overlay (M10): opacity only. */
+[data-header] .header-scroll-overlay { opacity: 0; transition: opacity 200ms ease-out; }
+[data-header].is-scrolled .header-scroll-overlay { opacity: 1; }
+
+/* Sticky buy bar (M44): transform only. */
+[data-sticky-bar] { transform: translateY(110%); transition: transform 250ms var(--ease-out-soft); }
+[data-sticky-bar].sticky-bar-visible { transform: none; }
+
+/* Free-shipping sweep while incomplete (E11). */
+.free-shipping-sweep {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / .5), transparent);
+    transform: translateX(100%); animation-play-state: paused;
+}
+.is-live.free-shipping-sweep, .free-shipping-fill .is-live.free-shipping-sweep { animation: shipping-sweep 2.2s linear infinite; animation-play-state: running; }
+@keyframes shipping-sweep { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+
+/* Livewire navigate progress bar (E15): yellow wire with spark head. */
+#nprogress .bar { background: var(--color-primary) !important; height: 3px !important; }
+#nprogress .peg { box-shadow: none !important; border-top: 3px solid var(--color-spark); }
+
+/* ---- Phase 4A: header / topbar / drawer (spec §10.5, §11.8 M10-M13) ---- */
+
+/* M10: the scroll overlay is a pre-drawn border layer whose opacity
+   fades in after 8px of scroll (header.js toggles .is-scrolled). */
+[data-header].is-scrolled .header-scroll-overlay { opacity: 1; }
+
+/* M11 topbar marquee: messages travel so each message's first word
+   enters first in RTL; paused on hover/focus/touch. The track holds
+   two copies, so a 50% shift loops seamlessly. Static in lite/off
+   (the .ambient safety nets above already stop it there). */
+.topbar-marquee .marquee-track { animation: marquee-scroll 28s linear infinite; }
+.topbar-marquee:hover .marquee-track,
+.topbar-marquee:focus-within .marquee-track,
+.topbar-marquee:active .marquee-track { animation-play-state: paused; }
+@keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(50%); }
+}
+
+/* M13 mobile drawer: native <dialog> positioned at the inline-start
+   edge (right in RTL); slide uses transform only. */
+.mobile-drawer { inset-inline-start: 0; inset-inline-end: auto; top: 0; }
+html.js:not([data-motion="off"]) .mobile-drawer[open] { animation: drawer-in 250ms var(--ease-out-soft); }
+@keyframes drawer-in {
+    from { transform: translateX(40px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+.mobile-drawer summary::-webkit-details-marker { display: none; }
+
+/* Static-page rich text basics (sanitized admin content). */
+.prose-store h2 { font-size: 1.375rem; font-weight: 800; color: var(--color-ink); margin-top: 1.5rem; }
+.prose-store h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-ink); margin-top: 1.25rem; }
+.prose-store ul { list-style: disc; padding-inline-start: 1.5rem; }
+.prose-store ol { list-style: decimal; padding-inline-start: 1.5rem; }
+.prose-store a { color: var(--color-link); text-decoration: underline; }
+
+/* ---- Phase 5A: cart motion (spec §11.8 M51/M52) ---- */
+/* Coupon error shake: transform only, 300ms, finite. */
+.coupon-shake { animation: coupon-shake 300ms ease-in-out 1; }
+@keyframes coupon-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(4px); }
+    75% { transform: translateX(-4px); }
+}
+/* Totals change flash: a pre-drawn yellow overlay fades out (opacity
+   only — never a background-color animation on the totals themselves). */
+.totals-flash::after {
+    content: ""; position: absolute; inset: 0; border-radius: 8px;
+    background: var(--color-primary); opacity: 0; pointer-events: none;
+    animation: totals-flash 600ms ease-out 1;
+}
+@keyframes totals-flash { from { opacity: .18; } to { opacity: 0; } }
+html[data-motion="off"] .totals-flash::after { animation: none; }
+
+/* ---- Owner extra: loading splash (OWNER OVERRIDE, 2026-11-23) ----
+   Spec §11.2 rule 9 / §12 forbade preloaders; the owner explicitly asked
+   for this screen. It is an overlay only and can never trap content:
+   - display:none unless the inline head script added html.js (no JS = no
+     splash at all, content fully visible);
+   - splash.js hides it on window load (immediately on DOMContentLoaded at
+     motion off), with a 2.5s hard cap in JS;
+   - as a last resort this CSS animation fades it away at 2.6s forwards,
+     even if the JS module failed to load. */
+.splash {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    align-items: center; justify-content: center;
+    background: var(--color-ink);
+    animation: splash-autohide 400ms ease-out 2600ms forwards;
+    transition: opacity 350ms ease-out;
+}
+html.js .splash { display: flex; }
+.splash.is-hidden { opacity: 0; pointer-events: none; }
+@keyframes splash-autohide {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+.splash-inner {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1rem; padding: 1.5rem; text-align: center;
+}
+.splash-logo-wrap { position: relative; inline-size: 96px; block-size: 96px; }
+.splash-logo {
+    position: relative; z-index: 1;
+    inline-size: 96px; block-size: 96px;
+    border-radius: 20px; object-fit: contain;
+}
+/* Pre-drawn glow behind the logo: opacity/transform only (spec §11.2). */
+.splash-glow {
+    position: absolute; inset: -28px; border-radius: 9999px;
+    background: radial-gradient(circle, rgb(255 193 7 / .35) 0%, transparent 70%);
+    opacity: 0;
+}
+/* One-time ring expanding from the logo (finite, full motion only). */
+.splash-ring {
+    position: absolute; inset: 0; z-index: 2; border-radius: 20px;
+    border: 2px solid var(--color-primary); opacity: 0; pointer-events: none;
+}
+html[data-motion="full"] .splash-glow { animation: splash-glow-in 900ms var(--ease-out-soft) 100ms 1 forwards; }
+html[data-motion="full"] .splash-ring { animation: splash-ring-out 900ms var(--ease-out-soft) 150ms 1 forwards; }
+@keyframes splash-glow-in {
+    from { opacity: 0; transform: scale(.7); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-ring-out {
+    0% { opacity: .7; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.45); }
+}
+/* Lite: static logo and name, no glow/ring/pulse (the .ambient net above
+   already stops the wire pulse); the fade-out transition still applies.
+   Off / reduced motion: all animations are killed by the global nets and
+   splash.js removes the node on DOMContentLoaded. */
+.splash-name {
+    color: var(--color-surface);
+    font-size: 1.25rem; font-weight: 800; line-height: 1.5;
+}
+.splash-wire { display: block; }

@@ -13,7 +13,7 @@
                 <h3 class="font-extrabold text-ink">{{ __('store.write_review') }}</h3>
                 <div>
                     <label for="rating-{{ $productId }}" class="mb-1 block font-semibold text-ink">{{ __('store.rating') }}</label>
-                    <select id="rating-{{ $productId }}" wire:model="rating" class="min-h-11 rounded-lg border border-wire px-3">
+                    <select id="rating-{{ $productId }}" wire:model="rating" class="ui-select min-h-11 w-auto max-w-full rounded-lg border border-wire px-3">
                         @for($i = 5; $i >= 1; $i--)<option value="{{ $i }}">{{ $i }} ★</option>@endfor
                     </select>
                     @error('rating') <p class="mt-1 text-sm text-danger">{{ $message }}</p> @enderror

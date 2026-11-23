@@ -15,7 +15,7 @@
         </button>
         <label class="flex min-h-11 flex-1 items-center gap-2 rounded-lg bg-surface px-3 shadow-sm">
             <span class="font-bold">{{ __('store.sort') }}</span>
-            <select wire:model.live="sort" class="min-h-11 w-full bg-transparent font-semibold" aria-label="{{ __('store.sort') }}">
+            <select wire:model.live="sort" class="ui-select min-h-11 w-full bg-transparent font-semibold" aria-label="{{ __('store.sort') }}">
                 <option value="latest">{{ __('store.sort_latest') }}</option>
                 <option value="price_asc">{{ __('store.sort_price_asc') }}</option>
                 <option value="price_desc">{{ __('store.sort_price_desc') }}</option>
@@ -31,7 +31,7 @@
                 <h2 class="font-extrabold text-ink">{{ __('store.filters') }}</h2>
                 <label class="flex items-center gap-2 text-sm">
                     <span class="font-bold">{{ __('store.sort') }}</span>
-                    <select wire:model.live="sort" class="min-h-11 rounded-lg border border-wire-dark/30 px-2 font-semibold" aria-label="{{ __('store.sort') }}">
+                    <select wire:model.live="sort" class="ui-select min-h-11 rounded-lg border border-wire-dark/30 px-2 font-semibold" aria-label="{{ __('store.sort') }}">
                         <option value="latest">{{ __('store.sort_latest') }}</option>
                         <option value="price_asc">{{ __('store.sort_price_asc') }}</option>
                         <option value="price_desc">{{ __('store.sort_price_desc') }}</option>

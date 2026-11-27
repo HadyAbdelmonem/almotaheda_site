@@ -60,3 +60,12 @@ test('motion js modules and css rules exist', function () {
         ->toContain('@keyframes bulb-flicker')
         ->toContain('html[data-motion="off"]');
 });
+
+test('layout renders the owner motion level separately from the device downgrade', function () {
+    // Owner fix 2026-11-27: slider autoplay and the back-to-top smooth
+    // scroll follow data-motion-owner (never device-downgraded).
+    $this->get('/')->assertSee('data-motion-owner="full"', false);
+
+    Setting::create(['key' => 'motion_level', 'value' => 'off']);
+    $this->get('/')->assertSee('data-motion-owner="off"', false);
+});

@@ -43,11 +43,33 @@ class HomeController extends Controller
                     ->pluck('id')
                     ->all();
 
+                // Best sellers (owner fix, 2026-11-27): products with REAL
+                // sales lead, ordered by sales_count; the row is then
+                // filled up to 10 with the newest active products so the
+                // carousel is never a single lonely card on a young store
+                // with little sales history. As real orders accumulate,
+                // actual best sellers take the row over automatically.
+                $bestSellerIds = Product::query()->where('is_active', true)
+                    ->where('sales_count', '>', 0)
+                    ->orderByDesc('sales_count')->orderByDesc('id')
+                    ->limit(10)
+                    ->pluck('id')
+                    ->all();
+                if (count($bestSellerIds) < 10) {
+                    $fillIds = Product::query()->where('is_active', true)
+                        ->whereNotIn('id', $bestSellerIds)
+                        ->orderByDesc('created_at')->orderByDesc('id')
+                        ->limit(10 - count($bestSellerIds))
+                        ->pluck('id')
+                        ->all();
+                    $bestSellerIds = [...$bestSellerIds, ...$fillIds];
+                }
+
                 return [
                     'heroBanners' => $bannerIds(BannerPosition::Hero, 5),
                     'promoBanners' => $bannerIds(BannerPosition::Promo, 3),
                     'brands' => Brand::query()->where('is_active', true)->orderBy('sort_order')->pluck('id')->all(),
-                    'bestSellers' => $productIds(fn ($q) => $q->orderByDesc('sales_count')->orderByDesc('id')),
+                    'bestSellers' => $bestSellerIds,
                     'newArrivals' => $productIds(fn ($q) => $q->orderByDesc('created_at')->orderByDesc('id')),
                 ];
             });

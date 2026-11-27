@@ -85,3 +85,17 @@ test('inactive products never appear on the homepage', function () {
 
     $this->get('/')->assertOk()->assertDontSee('منتج موقوف');
 });
+
+test('best sellers row fills with real catalog products when sales are scarce', function () {
+    // Owner fix 2026-11-27: with little/no sales history the carousel must
+    // still show a full row of real products (never one lonely big card),
+    // and a product with real sales still leads the row.
+    Product::factory()->count(12)->create(['is_active' => true, 'sales_count' => 0]);
+    $seller = Product::factory()->create(['is_active' => true, 'sales_count' => 7]);
+
+    $response = $this->get('/')->assertOk();
+    $bestSellers = $response->viewData('bestSellers');
+
+    expect($bestSellers)->toHaveCount(10)
+        ->and($bestSellers->first()->id)->toBe($seller->id);
+});

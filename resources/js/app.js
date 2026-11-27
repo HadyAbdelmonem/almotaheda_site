@@ -43,11 +43,11 @@ document.addEventListener('livewire:navigated', () => {
 });
 
 // Homepage hero + product carousels + brands rail load lazily only where present.
-if (document.querySelector('[data-hero], [data-product-carousel], [data-brands-rail]')) {
+if (document.querySelector('[data-hero], [data-brands-rail]')) {
     import('./home.js');
 }
 document.addEventListener('livewire:navigated', () => {
-    if (document.querySelector('[data-hero], [data-product-carousel], [data-brands-rail]')) {
+    if (document.querySelector('[data-hero], [data-brands-rail]')) {
         import('./home.js');
     }
 });

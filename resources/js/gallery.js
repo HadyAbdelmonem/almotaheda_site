@@ -35,7 +35,7 @@ function initGalleries() {
         const mainEl = root.querySelector('[data-gallery-main]');
         const slideCount = mainEl.querySelectorAll('.swiper-slide').length;
         const autoplay = autoplayAllowed() && slideCount > 1
-            ? { delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }
+            ? { delay: 5000, disableOnInteraction: false }
             : false;
         const prevEl = root.querySelector('[data-gallery-prev]');
         const nextEl = root.querySelector('[data-gallery-next]');

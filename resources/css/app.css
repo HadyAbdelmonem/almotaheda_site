@@ -76,6 +76,16 @@ html, body { overflow-x: clip; }
    scroll-behavior: auto, so jumps stay instant for accessibility. */
 html[data-motion="full"], html[data-motion="lite"] { scroll-behavior: smooth; }
 
+/* Product carousel pre-init guard (owner fix, 2026-11-27): before the
+   lazily-loaded Swiper initializes (or if it is delayed), slides must
+   already sit at their carousel widths — otherwise the first card
+   renders full-width and the section looks like one giant item.
+   Swiper's inline widths override these the moment it initializes. */
+.swiper[data-product-carousel] .swiper-slide { width: 45%; }
+@media (min-width: 768px) { .swiper[data-product-carousel] .swiper-slide { width: 32%; } }
+@media (min-width: 1024px) { .swiper[data-product-carousel] .swiper-slide { width: 24%; } }
+@media (min-width: 1280px) { .swiper[data-product-carousel] .swiper-slide { width: 19%; } }
+
 /* Motion safety nets (spec §11.4): off level and reduced motion show final states. */
 html[data-motion="off"] *,
 html[data-motion="off"] *::before,

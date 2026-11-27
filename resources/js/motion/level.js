@@ -27,6 +27,17 @@ export function motionLevel() {
     return ORDER[current] !== undefined ? current : 'full';
 }
 
+// The OWNER's chosen level (server-rendered, never downgraded by the
+// device). Functional motion the owner explicitly asked for — slider
+// autoplay and the back-to-top smooth scroll — follows this level, so a
+// visitor device reporting Save-Data / weak hardware / reduced motion
+// no longer silently stops the sliders or makes the scroll jump. The
+// device downgrade (data-motion) still calms decorative animation.
+export function ownerMotionLevel() {
+    const owner = document.documentElement.dataset.motionOwner || 'full';
+    return ORDER[owner] !== undefined ? owner : 'full';
+}
+
 export function applyMotionLevel() {
     try {
         const el = document.documentElement;

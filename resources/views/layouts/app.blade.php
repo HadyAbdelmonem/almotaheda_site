@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-motion="{{ setting('motion_level', 'full') }}">
+<html lang="ar" dir="rtl" data-motion="{{ setting('motion_level', 'full') }}" data-motion-owner="{{ setting('motion_level', 'full') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

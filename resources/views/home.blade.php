@@ -119,16 +119,17 @@
             </section>
         @endif
 
-        {{-- Best sellers carousel (M26): ~2.2 cards visible on mobile. --}}
+        {{-- Best sellers (owner fix, 2026-11-27): a plain grid identical
+             to New Arrivals below — the owner found the carousel row
+             misaligned/clipped next to the clean grid, so both product
+             sections now share the exact same layout and card size. --}}
         @if($bestSellers->isNotEmpty())
             <section aria-label="{{ __('store.best_sellers') }}">
                 <x-section-title :title="__('store.best_sellers')" />
-                <div class="swiper" data-product-carousel dir="rtl">
-                    <div class="swiper-wrapper">
-                        @foreach($bestSellers as $product)
-                            <div class="swiper-slide h-auto"><x-product-card :product="$product" class="h-full" /></div>
-                        @endforeach
-                    </div>
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5" x-reveal.stagger>
+                    @foreach($bestSellers->take(5) as $product)
+                        <div><x-product-card :product="$product" /></div>
+                    @endforeach
                 </div>
             </section>
         @endif

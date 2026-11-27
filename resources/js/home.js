@@ -1,4 +1,4 @@
-// Homepage Swipers (spec §6.5/§10.6, M20/M26): hero slider + product
+// Homepage Swipers (spec §6.5/§10.6, M20/M26): hero slider + brands rail.
 // carousels + brands rail. Swiper DOM lives inside wire:ignore and is
 // initialized here, re-hooked on livewire:navigated (never
 // DOMContentLoaded only).
@@ -26,8 +26,12 @@ function autoplayAllowed() {
 function initHero(root) {
     if (root.dataset.heroInit) return;
     root.dataset.heroInit = '1';
+    // No pauseOnMouseEnter (owner fix, 2026-11-27): a mouse resting over
+    // the hero kept it frozen for the whole visit, which read as "the
+    // images never move". It advances every 10s, period; the visible
+    // pause/play button remains for anyone who wants it stopped.
     const autoplay = autoplayAllowed()
-        ? { delay: 10000, disableOnInteraction: false, pauseOnMouseEnter: true }
+        ? { delay: 10000, disableOnInteraction: false }
         : false;
     const swiper = new Swiper(root.querySelector('[data-hero-main]'), {
         modules: [Autoplay, Pagination],
@@ -60,22 +64,6 @@ function initHero(root) {
     }
 }
 
-function initProductCarousels() {
-    document.querySelectorAll('[data-product-carousel]').forEach((el) => {
-        if (el.dataset.carouselInit) return;
-        el.dataset.carouselInit = '1';
-        new Swiper(el, {
-            slidesPerView: 2.2,
-            spaceBetween: 12,
-            breakpoints: {
-                768: { slidesPerView: 3 },
-                1024: { slidesPerView: 4 },
-                1280: { slidesPerView: 5 },
-            },
-        });
-    });
-}
-
 function initBrandsRails() {
     document.querySelectorAll('[data-brands-rail]').forEach((el) => {
         if (el.dataset.brandsInit) return;
@@ -85,7 +73,7 @@ function initBrandsRails() {
         // with fewer brands the rail is a plain swipeable strip.
         const loop = slideCount >= 6;
         const autoplay = autoplayAllowed() && slideCount > 2
-            ? { delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }
+            ? { delay: 5000, disableOnInteraction: false }
             : false;
         new Swiper(el, {
             modules: [Autoplay],
@@ -99,7 +87,6 @@ function initBrandsRails() {
 
 function initHome() {
     document.querySelectorAll('[data-hero]').forEach(initHero);
-    initProductCarousels();
     initBrandsRails();
 }
 

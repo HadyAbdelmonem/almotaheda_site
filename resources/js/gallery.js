@@ -8,7 +8,7 @@
 // with more than one image, pausing on hover and while the user
 // interacts (disableOnInteraction stays false so it resumes afterwards).
 import { Swiper } from 'swiper';
-import { Autoplay, Pagination, Thumbs, Zoom } from 'swiper/modules';
+import { Autoplay, Navigation, Pagination, Thumbs, Zoom } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/zoom';
@@ -36,11 +36,14 @@ function initGalleries() {
         const autoplay = motionIsFull() && slideCount > 1
             ? { delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }
             : false;
+        const prevEl = root.querySelector('[data-gallery-prev]');
+        const nextEl = root.querySelector('[data-gallery-next]');
         new Swiper(mainEl, {
-            modules: [Autoplay, Thumbs, Zoom, Pagination],
+            modules: [Autoplay, Navigation, Thumbs, Zoom, Pagination],
             zoom: { maxRatio: 2 },
             loop: slideCount > 1,
             autoplay,
+            navigation: prevEl && nextEl ? { prevEl, nextEl } : false,
             pagination: { el: root.querySelector('[data-gallery-pagination]'), clickable: true },
             thumbs: thumbs ? { swiper: thumbs } : undefined,
         });

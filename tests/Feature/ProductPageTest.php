@@ -12,6 +12,7 @@ use App\Models\Review;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -189,4 +190,26 @@ test('related products come from the same category, preferring the same brand', 
 
     $html = $this->get('/products/'.$product->slug)->assertOk()->getContent();
     expect(strpos($html, 'منتج نفس الماركة'))->toBeLessThan(strpos($html, 'منتج ماركة أخرى'));
+});
+
+test('gallery shows edge navigation arrows and padded image only with multiple images', function () {
+    // Owner request 2026-11-27: prev/next arrows on the gallery edges and a
+    // slightly reduced, breathing-room image (p-8/md:p-10 instead of p-4).
+    $product = makePageProduct();
+    $product->addMedia(UploadedFile::fake()->image('one.jpg', 800, 800))->toMediaCollection('gallery');
+    $product->addMedia(UploadedFile::fake()->image('two.jpg', 800, 800))->toMediaCollection('gallery');
+
+    $this->get(route('products.show', $product->slug))
+        ->assertOk()
+        ->assertSee('data-gallery-prev', false)
+        ->assertSee('data-gallery-next', false)
+        ->assertSee('object-contain p-8 md:p-10', false);
+
+    $single = makePageProduct();
+    $single->addMedia(UploadedFile::fake()->image('only.jpg', 800, 800))->toMediaCollection('gallery');
+
+    $this->get(route('products.show', $single->slug))
+        ->assertOk()
+        ->assertDontSee('data-gallery-prev', false)
+        ->assertDontSee('data-gallery-next', false);
 });

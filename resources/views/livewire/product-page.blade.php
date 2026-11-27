@@ -28,11 +28,26 @@
                                     <img src="{{ $slide['url'] }}" alt="{{ $slide['alt'] }}" width="1200" height="1200"
                                          @isset($slide['srcset']) srcset="{{ $slide['srcset'] }}" sizes="(max-width: 1023px) 100vw, 600px" @endisset
                                          @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
-                                         class="aspect-square w-full bg-white object-contain p-4">
+                                         class="aspect-square w-full bg-white object-contain p-8 md:p-10">
                                 </div>
                             </div>
                         @endforeach
                     </div>
+                    @if($slides->count() > 1)
+                        {{-- Edge navigation arrows (owner request 2026-11-27): light gray
+                             semi-transparent rectangles, thin white chevrons, vertically
+                             centred on the gallery edges; loop mode cycles infinitely.
+                             Prev sits at the inline-start edge (right in RTL), next at
+                             the inline-end edge (left in RTL). --}}
+                        <button type="button" data-gallery-prev aria-label="الصورة السابقة"
+                                class="absolute start-0 top-1/2 z-10 flex h-16 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm bg-neutral-300/60 text-white transition-colors hover:bg-neutral-400/70">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+                        </button>
+                        <button type="button" data-gallery-next aria-label="الصورة التالية"
+                                class="absolute end-0 top-1/2 z-10 flex h-16 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm bg-neutral-300/60 text-white transition-colors hover:bg-neutral-400/70">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+                        </button>
+                    @endif
                     <div class="swiper-pagination" data-gallery-pagination></div>
                 </div>
                 @if($slides->count() > 1)
